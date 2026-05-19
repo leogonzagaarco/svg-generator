@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Brand Themer</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0d0d0f;
+            --surface: #16161a;
+            --surface2: #1e1e24;
+            --border: #2a2a35;
+            --text: #f0f0f5;
+            --muted: #6b6b80;
+            --accent: #7c6dfa;
+            --accent2: #b8aeff;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 18px 32px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), #e070ff);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        header small {
+            color: var(--muted);
+            font-size: 11px;
+            margin-left: auto;
+        }
+
+        .main {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* ── PANEL ── */
+        .panel {
+            border-right: 1px solid var(--border);
+            padding: 20px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            overflow-y: auto;
+        }
+
+        .label {
+            font-family: 'Syne', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        /* Upload */
+        .drop {
+            border: 2px dashed var(--border);
+            border-radius: 11px;
+            padding: 22px 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s;
+            position: relative;
+            background: var(--surface);
+        }
+
+        .drop:hover,
+        .drop.over {
+            border-color: var(--accent);
+            background: #1a1a28;
+        }
+
+        .drop input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .drop-icon {
+            font-size: 26px;
+            margin-bottom: 6px;
+        }
+
+        .drop strong {
+            font-size: 13px;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .drop p {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .file-badge {
+            display: none;
+            align-items: center;
+            gap: 7px;
+            background: #172217;
+            border: 1px solid #2a4a2a;
+            border-radius: 7px;
+            padding: 7px 11px;
+            font-size: 11px;
+            color: #7fdd7f;
+        }
+
+        .file-badge.on {
+            display: flex;
+        }
+
+        /* Color picker from SVG */
+        .color-picker-wrap {
+            display: none;
+        }
+
+        .color-picker-wrap.on {
+            display: block;
+        }
+
+        .color-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .color-chip {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all .15s;
+            background: var(--surface2);
+            font-size: 11px;
+            font-family: monospace;
+            color: var(--muted);
+        }
+
+        .color-chip:hover {
+            border-color: #444;
+            color: var(--text);
+        }
+
+        .color-chip.active {
+            border-color: var(--accent);
+            color: var(--text);
+            background: #1e1e30;
+        }
+
+        .chip-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, .1);
+        }
+
+        .chip-count {
+            font-size: 10px;
+            color: var(--muted);
+            margin-left: auto;
+        }
+
+        .color-hint {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        .color-hint b {
+            color: var(--accent2);
+        }
+
+        /* Brands */
+        .brands-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .brand-card {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 9px 11px;
+            border-radius: 9px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all .15s;
+            background: var(--surface);
+            position: relative;
+            user-select: none;
+        }
+
+        .brand-card:hover {
+            border-color: #3a3a50;
+        }
+
+        .brand-card.on {
+            border-color: var(--bc, var(--accent));
+        }
+
+        .brand-card.on::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 8px;
+            background: var(--bc, var(--accent));
+            opacity: .07;
+            pointer-events: none;
+        }
+
+        .bdot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .bname {
+            font-size: 12px;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .bhex {
+            font-size: 10px;
+            color: var(--muted);
+            font-family: monospace;
+        }
+
+        .bcheck {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .15s;
+            flex-shrink: 0;
+        }
+
+        .brand-card.on .bcheck {
+            background: var(--bc, var(--accent));
+            border-color: var(--bc, var(--accent));
+        }
+
+        .bcheck::after {
+            content: '✓';
+            font-size: 8px;
+            color: #fff;
+            opacity: 0;
+            transition: opacity .15s;
+        }
+
+        .brand-card.on .bcheck::after {
+            opacity: 1;
+        }
+
+        .add-row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 11px;
+            border-radius: 9px;
+            border: 1px dashed var(--border);
+            background: var(--surface);
+            margin-top: 3px;
+        }
+
+        .add-row input[type="color"] {
+            width: 24px;
+            height: 24px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            background: none;
+        }
+
+        .add-row input[type="text"] {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 11px;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .add-row input[type="text"]::placeholder {
+            color: var(--muted);
+        }
+
+        .btn-xs {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 3px 9px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 11px;
+            font-family: 'DM Sans', sans-serif;
+            white-space: nowrap;
+            transition: all .15s;
+        }
+
+        .btn-xs:hover {
+            border-color: var(--accent);
+            color: var(--accent2);
+        }
+
+        /* Filename */
+        .fname-input {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 11px;
+            color: var(--text);
+            font-size: 12px;
+            font-family: 'DM Sans', sans-serif;
+            outline: none;
+            transition: border-color .15s;
+        }
+
+        .fname-input:focus {
+            border-color: var(--accent);
+        }
+
+        .fname-hint {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .fname-hint code {
+            color: var(--accent2);
+        }
+
+        .btn-gen {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--accent), #9b6dfa);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+            margin-top: auto;
+        }
+
+        .btn-gen:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(124, 109, 250, .4);
+        }
+
+        .btn-gen:disabled {
+            opacity: .3;
+            cursor: not-allowed;
+        }
+
+        /* ── OUTPUT ── */
+        .output {
+            padding: 22px 26px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .empty {
+            margin: auto;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .empty .eicon {
+            font-size: 44px;
+            margin-bottom: 12px;
+            opacity: .2;
+        }
+
+        .empty p {
+            font-size: 13px;
+            line-height: 1.7;
+            max-width: 240px;
+            margin: 0 auto;
+        }
+
+        .out-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .out-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .btn-all {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 13px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 11px;
+            font-family: 'DM Sans', sans-serif;
+            transition: all .15s;
+        }
+
+        .btn-all:hover {
+            border-color: var(--accent);
+            color: var(--accent2);
+        }
+
+        .rgrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 14px;
+        }
+
+        .rcard {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            overflow: hidden;
+            transition: border-color .2s;
+        }
+
+        .rcard:hover {
+            border-color: #404050;
+        }
+
+        .rpreview {
+            background: #f0f0f2;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 150px;
+        }
+
+        .rpreview svg {
+            max-width: 100%;
+            max-height: 140px;
+        }
+
+        .rfoot {
+            padding: 10px 13px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            border-top: 1px solid var(--border);
+        }
+
+        .rmeta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .rbrand {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 2px;
+        }
+
+        .rbdot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .rbname {
+            font-family: 'Syne', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .rfile {
+            font-size: 10px;
+            color: var(--muted);
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .btn-dl {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-family: 'DM Sans', sans-serif;
+            transition: all .15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-dl:hover {
+            border-color: var(--accent);
+            color: var(--accent2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">🎨</div>
+        <h1>SVG Brand Themer</h1>
+        <small>Apenas a cor da marca é trocada — todo o resto permanece igual</small>
+    </header>
+
+    <div class="main">
+        <div class="panel">
+
+            <!-- 1. Upload -->
+            <div>
+                <div class="label">1. SVG de entrada</div>
+                <div class="drop" id="drop">
+                    <input type="file" id="fileInput" accept=".svg,image/svg+xml">
+                    <div class="drop-icon">📁</div>
+                    <strong>Clique ou arraste o SVG</strong>
+                    <p>Todas as cores encontradas serão listadas</p>
+                </div>
+                <div class="file-badge" id="fileBadge">✅ <span id="fileName"></span></div>
+            </div>
+
+            <!-- 2. Escolher cor da marca -->
+            <div class="color-picker-wrap" id="colorPickerWrap">
+                <div class="label">2. Qual é a cor da marca neste SVG?</div>
+                <div class="color-grid" id="colorGrid"></div>
+                <p class="color-hint">Clique na cor que muda entre marcas.<br>Ex: se o SVG é do SAS, selecione
+                    <b>#3774FF</b>.
+                </p>
+            </div>
+
+            <!-- 3. Marcas -->
+            <div>
+                <div class="label">3. Gerar para as marcas</div>
+                <div class="brands-list" id="brandsList"></div>
+                <div class="add-row">
+                    <input type="color" id="addColor" value="#ff6b35">
+                    <input type="text" id="addName" placeholder="Nova marca…" maxlength="30">
+                    <button class="btn-xs" onclick="addBrand()">+ Add</button>
+                </div>
+            </div>
+
+            <!-- 4. Nome -->
+            <div>
+                <div class="label">4. Nome base do arquivo</div>
+                <input class="fname-input" type="text" id="baseName" placeholder="ex: illustration">
+                <div class="fname-hint">Saída: <code id="namePreview">arquivo-marca.svg</code></div>
+            </div>
+
+            <button class="btn-gen" id="btnGen" onclick="generate()" disabled>✨ Gerar variantes</button>
+        </div>
+
+        <div class="output" id="output">
+            <div class="empty">
+                <div class="eicon">🖼️</div>
+                <p>Carregue o SVG, escolha a cor da marca e selecione as marcas desejadas.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── state
+        let svgSource = '';
+        let brandColor = '';        // the color to be swapped out
+        let selected = new Set();
+
+        const defaultBrands = [
+            { id: 'coc', name: 'COC', color: '#55C051' },
+            { id: 'sas', name: 'SAS', color: '#3774FF' },
+            { id: 'is', name: 'IS', color: '#F19821' },
+            { id: 'positivo', name: 'Positivo', color: '#EBA922' },
+            { id: 'sae', name: 'SAE', color: '#A550B4' },
+            { id: 'conquista', name: 'Conquista', color: '#FF6B9C' },
+            { id: 'geekie', name: 'Geekie', color: '#F56775' },
+            { id: 'ways', name: 'Ways', color: '#BF6F98' },
+            { id: 'ei', name: 'EI', color: '#FE8565' },
+            { id: 'pes', name: 'PES', color: '#FE8565' },
+            { id: 'pgs', name: 'PGS', color: '#FE8565' },
+
+
+
+        ];
+        let brands = [...defaultBrands];
+
+        // ── upload
+        const drop = document.getElementById('drop');
+        drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+        drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+        drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) load(f); });
+        document.getElementById('fileInput').addEventListener('change', e => { if (e.target.files[0]) load(e.target.files[0]); });
+
+        function load(file) {
+            if (!file.name.toLowerCase().endsWith('.svg')) { alert('Envie um .svg'); return; }
+            new FileReader().onload = ev => {
+                svgSource = ev.target.result;
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('fileBadge').classList.add('on');
+                const base = file.name.replace(/\.svg$/i, '');
+                document.getElementById('baseName').value = base;
+                updateNamePreview();
+                buildColorGrid();
+                brandColor = '';
+                updateBtn();
+            }, (r => { r.readAsText(file); r; })(new FileReader());
+
+            // redo with proper reader
+            const reader = new FileReader();
+            reader.onload = ev => {
+                svgSource = ev.target.result;
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('fileBadge').classList.add('on');
+                const base = file.name.replace(/\.svg$/i, '');
+                document.getElementById('baseName').value = base;
+                updateNamePreview();
+                buildColorGrid();
+                brandColor = '';
+                updateBtn();
+            };
+            reader.readAsText(file);
+        }
+
+        // ── extract all unique colors from SVG with frequency
+        function extractColors(svg) {
+            const freq = {};
+            for (const m of svg.matchAll(/fill="(#[0-9a-fA-F]{3,6})"/gi)) {
+                const c = norm(m[1]);
+                freq[c] = (freq[c] || 0) + 1;
+            }
+            // sort by frequency desc
+            return Object.entries(freq).sort((a, b) => b[1] - a[1]).map(([color, count]) => ({ color, count }));
+        }
+
+        function norm(hex) {
+            hex = hex.replace('#', '').toUpperCase();
+            if (hex.length === 3) hex = hex.split('').map(x => x + x).join('');
+            return '#' + hex;
+        }
+
+        function buildColorGrid() {
+            const colors = extractColors(svgSource);
+            const grid = document.getElementById('colorGrid');
+            grid.innerHTML = '';
+            colors.forEach(({ color, count }) => {
+                const chip = document.createElement('div');
+                chip.className = 'color-chip';
+                chip.title = `${count} ocorrência${count !== 1 ? 's' : ''}`;
+                chip.innerHTML = `<div class="chip-dot" style="background:${color}"></div>${color}<span class="chip-count">${count}×</span>`;
+                chip.addEventListener('click', () => selectBrandColor(color, chip));
+                grid.appendChild(chip);
+            });
+            document.getElementById('colorPickerWrap').classList.add('on');
+        }
+
+        function selectBrandColor(color, chip) {
+            brandColor = color;
+            document.querySelectorAll('.color-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            updateBtn();
+        }
+
+        // ── brands
+        function renderBrands() {
+            const list = document.getElementById('brandsList');
+            list.innerHTML = '';
+            brands.forEach(b => {
+                const card = document.createElement('div');
+                card.className = 'brand-card' + (selected.has(b.id) ? ' on' : '');
+                card.style.setProperty('--bc', b.color);
+                card.innerHTML = `<div class="bdot" style="background:${b.color}"></div><span class="bname">${b.name}</span><span class="bhex">${b.color.toUpperCase()}</span><div class="bcheck"></div>`;
+                card.addEventListener('click', () => {
+                    selected.has(b.id) ? selected.delete(b.id) : selected.add(b.id);
+                    card.classList.toggle('on', selected.has(b.id));
+                    updateBtn();
+                });
+                list.appendChild(card);
+            });
+        }
+
+        function addBrand() {
+            const color = document.getElementById('addColor').value;
+            const name = document.getElementById('addName').value.trim();
+            if (!name) return;
+            const id = 'x' + Date.now();
+            brands.push({ id, name, color });
+            selected.add(id);
+            document.getElementById('addName').value = '';
+            renderBrands();
+            updateBtn();
+        }
+
+        // ── filename
+        document.getElementById('baseName').addEventListener('input', updateNamePreview);
+        function updateNamePreview() {
+            const b = document.getElementById('baseName').value.trim() || 'arquivo';
+            document.getElementById('namePreview').textContent = `${b}-marca.svg`;
+        }
+
+        // ── generate button
+        function updateBtn() {
+            document.getElementById('btnGen').disabled = !svgSource || !brandColor || selected.size === 0;
+        }
+
+        // ── THE KEY LOGIC: swap only the exact brand color, nothing else
+        function swapColor(svg, from, to) {
+            // Escape the hex and match fill="FROM" exactly (case-insensitive)
+            const f = from.replace('#', '').toUpperCase();
+            return svg.replace(
+                new RegExp(`(fill=["'])#${f}(["'])`, 'gi'),
+                `$1${to.toUpperCase()}$2`
+            );
+        }
+
+        function generate() {
+            if (!svgSource || !brandColor || selected.size === 0) return;
+            const base = (document.getElementById('baseName').value.trim() || 'arquivo').replace(/\.svg$/i, '');
+            const results = brands
+                .filter(b => selected.has(b.id))
+                .map(b => ({
+                    brand: b,
+                    svg: swapColor(svgSource, brandColor, b.color),
+                    file: `${base}-${b.name.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_')}.svg`
+                }));
+            render(results);
+        }
+
+        function render(results) {
+            const out = document.getElementById('output');
+            out.innerHTML = '';
+
+            const hdr = document.createElement('div');
+            hdr.className = 'out-header';
+            hdr.innerHTML = `<h2>${results.length} variante${results.length !== 1 ? 's' : ''} gerada${results.length !== 1 ? 's' : ''}</h2><button class="btn-all" onclick="dlAll()">⬇ Baixar todas</button>`;
+            out.appendChild(hdr);
+
+            const grid = document.createElement('div');
+            grid.className = 'rgrid';
+            results.forEach(r => {
+                const card = document.createElement('div');
+                card.className = 'rcard';
+                card.innerHTML = `
+      <div class="rpreview">${r.svg}</div>
+      <div class="rfoot">
+        <div class="rmeta">
+          <div class="rbrand"><div class="rbdot" style="background:${r.brand.color}"></div><span class="rbname">${r.brand.name}</span></div>
+          <div class="rfile">${r.file}</div>
+        </div>
+        <button class="btn-dl">⬇ Baixar</button>
+      </div>`;
+                card.querySelector('.btn-dl').onclick = () => dl(r.svg, r.file);
+                grid.appendChild(card);
+            });
+            out.appendChild(grid);
+            window._res = results;
+        }
+
+        function dlAll() { (window._res || []).forEach((r, i) => setTimeout(() => dl(r.svg, r.file), i * 80)); }
+        function dl(svg, name) {
+            const a = Object.assign(document.createElement('a'), {
+                href: URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })),
+                download: name
+            });
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+
+        renderBrands();
+        updateNamePreview();
+    </script>
+</body>
+
+</html>
